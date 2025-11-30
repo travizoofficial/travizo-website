@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travizo | Premium India Travel</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#FF9933', // Saffron-ish Orange for India feel
+                            dark: '#1A1A1A',
+                            blue: '#138808', // Indian Green hint
+                            light: '#F9F9F9'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        
+        .hero-slide {
+            transition: opacity 1.5s ease-in-out;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+        
+        .hero-slide.active { opacity: 1; }
+        
+        /* Dark Overlay for Hero */
+        .hero-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+        }
+
+        .package-card:hover .package-img {
+            transform: scale(1.1);
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Logo Fallback Styles */
+        .logo-fallback {
+            display: none;
+        }
+        img.logo-img[style*="display: none"] + .logo-fallback {
+            display: flex;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: inline-block;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* WhatsApp Pulse Animation */
+        .whatsapp-pulse {
+            animation: pulse-green 2s infinite;
+        }
+        
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 antialiased bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-300 text-white py-4" id="navbar">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <!-- Logo Section -->
+            <a href="#home" class="flex items-center group space-x-3">
+                <!-- Primary Image Logo (Bigger size) -->
+                <img 
+                    src="IMG_2681.PNG" 
+                    alt="Travizo" 
+                    class="logo-img h-20 w-auto object-contain drop-shadow-lg transition transform group-hover:scale-105"
+                    onerror="this.style.display='none'"
+                >
+                <!-- Company Name -->
+                <span class="text-3xl font-serif font-bold tracking-wide text-white drop-shadow-md">Travizo</span>
+                
+                <!-- Fallback Text (Shows if image fails) -->
+                <div class="logo-fallback items-center space-x-2">
+                    <i data-lucide="map" class="text-brand-gold w-8 h-8"></i>
+                    <span class="text-2xl font-serif font-bold tracking-wide text-white drop-shadow-md">Travizo</span>
+                </div>
+            </a>
+            
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 text-sm font-medium uppercase tracking-wider items-center">
+                <a href="#home" class="hover:text-brand-gold transition drop-shadow-md">Home</a>
+                <a href="#packages" class="hover:text-brand-gold transition drop-shadow-md">India Packages</a>
+                <a href="#enquiry" class="bg-brand-gold hover:bg-orange-600 text-white px-5 py-2 rounded-full transition shadow-lg">Plan My Trip</a>
+                <a href="#reviews" class="hover:text-brand-gold transition drop-shadow-md">Reviews</a>
+                <a href="#about" class="hover:text-brand-gold transition drop-shadow-md">About</a>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden focus:outline-none" onclick="toggleMenu()">
+                <i data-lucide="menu" class="w-8 h-8 drop-shadow-md"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-dark/95 backdrop-blur-xl border-t border-gray-800 absolute w-full left-0 top-full shadow-xl">
+            <a href="#home" class="block py-3 px-6 hover:bg-gray-800" onclick="toggleMenu()">Home</a>
+            <a href="#packages" class="block py-3 px-6 hover:bg-gray-800" onclick="toggleMenu()">Packages</a>
+            <a href="#enquiry" class="block py-3 px-6 hover:bg-gray-800 text-brand-gold" onclick="toggleMenu()">Plan Trip</a>
+            <a href="#reviews" class="block py-3 px-6 hover:bg-gray-800" onclick="toggleMenu()">Reviews</a>
+            <a href="#about" class="block py-3 px-6 hover:bg-gray-800" onclick="toggleMenu()">About</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative h-screen flex items-center justify-center text-center px-4 overflow-hidden">
+        <!-- Slideshow Backgrounds (India Focused) -->
+        <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');"></div>
+
+        <div class="hero-overlay absolute inset-0 z-0"></div>
+
+        <div class="relative z-10 text-white max-w-5xl mx-auto mt-16">
+            <h2 class="text-brand-gold uppercase tracking-[0.2em] mb-4 text-sm md:text-base font-semibold animate-pulse shadow-black drop-shadow-md">Your Personal India Experts</h2>
+            <h1 class="font-serif text-5xl md:text-7xl font-bold mb-6 leading-tight drop-shadow-xl">You Chill, <br/> We Plan The Trip.</h1>
+            <p class="text-lg md:text-xl text-gray-100 mb-10 max-w-2xl mx-auto font-light drop-shadow-md">From the snow-capped Himalayas to the serene backwaters of Kerala, experience the magic of incredible India without the stress.</p>
+            <a href="#packages" class="bg-brand-gold hover:bg-orange-600 text-white px-8 py-4 rounded-full font-semibold transition transform hover:scale-105 shadow-lg inline-flex items-center gap-2">
+                Explore Packages <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Packages Section -->
+    <section id="packages" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h3 class="text-brand-gold font-bold uppercase tracking-widest text-sm mb-2">Incredible India</h3>
+                <h2 class="text-4xl font-serif font-bold text-brand-dark">Our Best Selling Packages</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Package 1: Golden Triangle -->
+                <div class="package-card group bg-white rounded-xl overflow-hidden shadow-xl cursor-pointer border border-gray-100 transform transition hover:-translate-y-2">
+                    <div class="relative h-64 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1599661046289-e31897846e41?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Jaipur Palace" class="package-img w-full h-full object-cover transition duration-700">
+                        <div class="absolute top-4 right-4 bg-brand-gold text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">Best Seller</div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex items-center gap-2 text-gray-500 text-sm mb-3">
+                            <i data-lucide="calendar" class="w-4 h-4 text-brand-gold"></i> 6 Days
+                            <span class="mx-1">•</span>
+                            <i data-lucide="map-pin" class="w-4 h-4 text-brand-gold"></i> Delhi, Agra, Jaipur
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 group-hover:text-brand-gold transition">The Golden Triangle</h3>
+                        <p class="text-gray-600 mb-6">Witness the majesty of the Taj Mahal, the pink city of Jaipur, and the history of Delhi in one go.</p>
+                        <button onclick="prefillDestination('Golden Triangle Tour')" class="w-full border-2 border-brand-dark text-brand-dark py-2 rounded-lg font-semibold hover:bg-brand-dark hover:text-white transition">Get Quote</button>
+                    </div>
+                </div>
+
+                <!-- Package 2: Kerala -->
+                <div class="package-card group bg-white rounded-xl overflow-hidden shadow-xl cursor-pointer border border-gray-100 transform transition hover:-translate-y-2">
+                    <div class="relative h-64 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1593693397690-362cb9666fc2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Kerala Houseboat" class="package-img w-full h-full object-cover transition duration-700">
+                        <div class="absolute top-4 right-4 bg-brand-blue text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">Trending</div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex items-center gap-2 text-gray-500 text-sm mb-3">
+                            <i data-lucide="calendar" class="w-4 h-4 text-brand-gold"></i> 5 Days
+                            <span class="mx-1">•</span>
+                            <i data-lucide="map-pin" class="w-4 h-4 text-brand-gold"></i> Munnar & Alleppey
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 group-hover:text-brand-gold transition">God's Own Country</h3>
+                        <p class="text-gray-600 mb-6">Relax on a traditional houseboat in the backwaters and sip tea in the misty hills of Munnar.</p>
+                        <button onclick="prefillDestination('Kerala Backwaters Package')" class="w-full border-2 border-brand-dark text-brand-dark py-2 rounded-lg font-semibold hover:bg-brand-dark hover:text-white transition">Get Quote</button>
+                    </div>
+                </div>
+
+                <!-- Package 3: Ladakh -->
+                <div class="package-card group bg-white rounded-xl overflow-hidden shadow-xl cursor-pointer border border-gray-100 transform transition hover:-translate-y-2">
+                    <div class="relative h-64 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Ladakh Mountains" class="package-img w-full h-full object-cover transition duration-700">
+                        <div class="absolute top-4 right-4 bg-brand-dark text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">Adventure</div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex items-center gap-2 text-gray-500 text-sm mb-3">
+                            <i data-lucide="calendar" class="w-4 h-4 text-brand-gold"></i> 7 Days
+                            <span class="mx-1">•</span>
+                            <i data-lucide="map-pin" class="w-4 h-4 text-brand-gold"></i> Leh & Ladakh
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 group-hover:text-brand-gold transition">Magical Ladakh</h3>
+                        <p class="text-gray-600 mb-6">Explore the high passes, Pangong Lake, and ancient monasteries in the land of high passes.</p>
+                        <button onclick="prefillDestination('Ladakh Adventure')" class="w-full border-2 border-brand-dark text-brand-dark py-2 rounded-lg font-semibold hover:bg-brand-dark hover:text-white transition">Get Quote</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enquiry Section -->
+    <section id="enquiry" class="py-20 bg-brand-dark text-white relative">
+        <div class="absolute inset-0 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/black-linen.png');"></div>
+        <div class="container mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center gap-16">
+            
+            <div class="w-full md:w-1/2">
+                <h3 class="text-brand-gold font-bold uppercase tracking-widest mb-2">Custom Itineraries</h3>
+                <h2 class="text-4xl font-serif font-bold mb-6">Let us handle the details while you chill.</h2>
+                <p class="text-gray-300 mb-8 leading-relaxed">Whether you want a spiritual journey in Varanasi, a beach party in Goa, or a royal wedding venue in Udaipur, Travizo makes it happen seamlessly.</p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-brand-gold p-3 rounded-full shadow-lg hover:scale-110 transition"><i data-lucide="phone" class="w-6 h-6 text-white"></i></div>
+                        <div>
+                            <p class="text-sm text-gray-400">Call Us Anytime</p>
+                            <p class="font-bold text-lg">+91 98765 43210</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="bg-brand-gold p-3 rounded-full shadow-lg hover:scale-110 transition"><i data-lucide="mail" class="w-6 h-6 text-white"></i></div>
+                        <div>
+                            <p class="text-sm text-gray-400">Email Us</p>
+                            <p class="font-bold text-lg">plan@travizo.in</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full md:w-1/2 bg-white text-gray-800 rounded-2xl p-8 shadow-2xl transform transition hover:scale-[1.01]">
+                <h3 class="text-2xl font-bold mb-6 text-brand-dark border-l-4 border-brand-gold pl-4">Send an Enquiry</h3>
+                <form id="enquiryForm" onsubmit="handleFormSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition" placeholder="Enter your name">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition" placeholder="+91...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                <input type="text" id="location" name="location" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition" placeholder="Your City">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Destination of Interest</label>
+                            <input type="text" id="destination" name="destination" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition" placeholder="e.g. Kashmir, Goa, Ooty">
+                        </div>
+
+                        <!-- IMPORTANT: WRAPPED ICON IN SPAN TO FIX LOADING BUG -->
+                        <button type="submit" id="submitBtn" class="w-full bg-brand-gold hover:bg-orange-600 text-white font-bold py-4 rounded-lg transition shadow-lg mt-2 flex justify-center items-center gap-2 transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                            <span>Send Enquiry</span> 
+                            <span id="btnIconWrapper"><i data-lucide="send" class="w-4 h-4"></i></span>
+                        </button>
+                        <p id="formStatus" class="text-xs text-gray-400 text-center mt-2 h-4"></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews" class="py-20 bg-orange-50/30">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-brand-gold font-bold uppercase tracking-widest text-sm mb-2">Testimonials</h3>
+            <h2 class="text-4xl font-serif font-bold text-brand-dark mb-12">Happy Travizo Travelers</h2>
+
+            <div class="relative max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-10 md:p-16">
+                <!-- Quote Icon -->
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-brand-gold p-4 rounded-full text-white shadow-lg">
+                    <i data-lucide="quote" class="w-8 h-8 fill-current"></i>
+                </div>
+
+                <div id="review-container">
+                    <div class="review-slide fade-in-up">
+                        <p class="text-xl md:text-2xl italic text-gray-600 mb-8 leading-relaxed">"Travizo made our Kashmir trip absolutely effortless. The houseboat arrangement in Dal Lake was stunning, and the driver was very polite. Highly recommended!"</p>
+                        <div>
+                            <h4 class="font-bold text-lg text-brand-dark">Rahul Sharma</h4>
+                            <p class="text-brand-gold text-sm font-medium">Trip to Kashmir</p>
+                            <div class="flex justify-center mt-2 text-yellow-400">
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slider Controls -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <button onclick="prevReview()" class="p-2 rounded-full border border-gray-300 hover:bg-brand-dark hover:text-white transition hover:scale-110"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
+                    <button onclick="nextReview()" class="p-2 rounded-full border border-gray-300 hover:bg-brand-dark hover:text-white transition hover:scale-110"><i data-lucide="chevron-right" class="w-6 h-6"></i></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about" class="py-20 bg-white border-t border-gray-100">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="w-full md:w-1/2 relative group">
+                    <div class="absolute -top-4 -left-4 w-24 h-24 bg-brand-gold/20 rounded-full z-0 transition group-hover:scale-125"></div>
+                    <img src="https://images.unsplash.com/photo-1590766940554-634a7ed41450?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Indian Culture" class="relative z-10 rounded-lg shadow-2xl w-full transform transition duration-500 hover:scale-[1.02]">
+                    <div class="absolute -bottom-6 -right-6 bg-white p-6 shadow-xl rounded-lg z-20 hidden md:block border-l-4 border-brand-gold">
+                        <p class="font-serif text-3xl font-bold text-brand-gold">10+</p>
+                        <p class="text-sm font-medium text-gray-600">Years in India Tourism</p>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h3 class="text-brand-gold font-bold uppercase tracking-widest text-sm mb-2">About Travizo</h3>
+                    <h2 class="text-4xl font-serif font-bold text-brand-dark mb-6">Discover the Soul of India</h2>
+                    <p class="text-gray-600 mb-6 leading-relaxed">Travizo is dedicated to showcasing the vibrant culture, breathtaking landscapes, and rich heritage of India. Our philosophy is simple: <strong>You chill, we plan the trip.</strong></p>
+                    <p class="text-gray-600 mb-8 leading-relaxed">From the beaches of Andaman to the palaces of Rajasthan, we curate experiences that are authentic, safe, and unforgettable.</p>
+                    <div class="flex gap-8">
+                        <div>
+                            <h4 class="font-bold text-brand-dark text-xl">50+</h4>
+                            <p class="text-sm text-gray-500">Cities Covered</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-brand-dark text-xl">10k+</h4>
+                            <p class="text-sm text-gray-500">Happy Guests</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark text-white py-12 border-t border-gray-800">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-6">
+                        <!-- Footer Logo with Grayscale Filter -->
+                        <img src="IMG_2681.PNG" alt="Travizo Logo" class="h-12 w-auto object-contain grayscale brightness-200" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                        <span style="display:none" class="text-xl font-serif font-bold">Travizo</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">Specialists in domestic travel across India. We ensure your Indian holiday is perfect.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#home" class="hover:text-brand-gold transition">Home</a></li>
+                        <li><a href="#packages" class="hover:text-brand-gold transition">Packages</a></li>
+                        <li><a href="#reviews" class="hover:text-brand-gold transition">Testimonials</a></li>
+                        <li><a href="#about" class="hover:text-brand-gold transition">About Us</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Top Destinations</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-brand-gold transition">Goa</a></li>
+                        <li><a href="#" class="hover:text-brand-gold transition">Kerala</a></li>
+                        <li><a href="#" class="hover:text-brand-gold transition">Rajasthan</a></li>
+                        <li><a href="#" class="hover:text-brand-gold transition">Himachal</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Newsletter</h4>
+                    <p class="text-gray-400 text-sm mb-4">Get the latest domestic deals.</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Email" class="w-full px-4 py-2 rounded-l-md bg-gray-800 border-none outline-none text-white focus:ring-1 focus:ring-brand-gold">
+                        <button class="bg-brand-gold px-4 py-2 rounded-r-md font-bold hover:bg-orange-600 transition">Go</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+                &copy; 2025 Travizo India. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Float Button -->
+    <a href="javascript:void(0)" onclick="openWhatsApp()" class="fixed bottom-6 right-6 z-50 whatsapp-pulse transition transform hover:scale-110 active:scale-95">
+        <div class="bg-[#25D366] text-white p-4 rounded-full shadow-2xl flex items-center justify-center w-16 h-16">
+            <svg viewBox="0 0 24 24" class="w-10 h-10 fill-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+        </div>
+    </a>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- CONFIGURATION ZONE ---
+        const YOUR_SERVICE_ID = "service_uimaptt";  
+        const YOUR_TEMPLATE_ID = "template_u337sn7"; 
+        const YOUR_PUBLIC_KEY = "qraEqr2tY9YtAjGCn"; 
+        
+        // --- WHATSAPP CONFIGURATION ---
+        // Change this number to your business WhatsApp number (with country code, no +)
+        const WHATSAPP_NUMBER = "919876543210"; 
+
+        // Initialize EmailJS
+        (function() {
+            // Updated check: Ensure we are using the REAL key, not the placeholder
+            if(YOUR_PUBLIC_KEY && YOUR_PUBLIC_KEY !== "YOUR_PUBLIC_KEY"){
+                emailjs.init(YOUR_PUBLIC_KEY);
+            }
+        })();
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                // Glass effect on scroll
+                navbar.classList.add('bg-brand-dark/90', 'backdrop-blur-md', 'shadow-lg');
+            } else {
+                // Transparent when at the top
+                navbar.classList.remove('bg-brand-dark/90', 'backdrop-blur-md', 'shadow-lg');
+            }
+        });
+
+        // Mobile Menu Toggle
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+            if (!menu.classList.contains('hidden')) {
+                navbar.classList.add('bg-brand-dark/90');
+            } else if (window.scrollY <= 50) {
+                navbar.classList.remove('bg-brand-dark/90');
+            }
+        }
+
+        // Hero Slideshow
+        const slides = document.querySelectorAll('.hero-slide');
+        let currentSlide = 0;
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        setInterval(nextSlide, 5000);
+
+        // Prefill Form from Package
+        function prefillDestination(dest) {
+            document.getElementById('destination').value = dest;
+            document.getElementById('enquiry').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Reviews Data and Logic
+        const reviews = [
+            {
+                text: "Travizo made our Kashmir trip absolutely effortless. The houseboat arrangement in Dal Lake was stunning, and the driver was very polite. Highly recommended!",
+                name: "Rahul Sharma",
+                location: "Trip to Kashmir"
+            },
+            {
+                text: "We booked the Golden Triangle tour. Everything was on time, the hotels were excellent, and the guides were very knowledgeable. A+ service.",
+                name: "Priya & Amit",
+                location: "Delhi-Agra-Jaipur"
+            },
+            {
+                text: "The Goa package was perfect for our group of friends. Travizo handled all the transfers and hotel bookings so we could just party and relax.",
+                name: "Karan Mehta",
+                location: "Goa Trip"
+            }
+        ];
+
+        let currentReview = 0;
+        const reviewContainer = document.getElementById('review-container');
+
+        function renderReview(index) {
+            const review = reviews[index];
+            reviewContainer.innerHTML = `
+                <div class="review-slide fade-in-up">
+                    <p class="text-xl md:text-2xl italic text-gray-600 mb-8 leading-relaxed">"${review.text}"</p>
+                    <div>
+                        <h4 class="font-bold text-lg text-brand-dark">${review.name}</h4>
+                        <p class="text-brand-gold text-sm font-medium">${review.location}</p>
+                        <div class="flex justify-center mt-2 text-yellow-400">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function nextReview() {
+            currentReview = (currentReview + 1) % reviews.length;
+            renderReview(currentReview);
+        }
+
+        function prevReview() {
+            currentReview = (currentReview - 1 + reviews.length) % reviews.length;
+            renderReview(currentReview);
+        }
+
+        // --- FIXED FORM HANDLING LOGIC ---
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const btnText = btn.querySelector('span');
+            // FIX: We now select the WRAPPER we added in HTML, not the 'i' tag
+            const iconWrapper = document.getElementById('btnIconWrapper');
+            const status = document.getElementById('formStatus');
+
+            // 1. Change Button State to Loading
+            btn.disabled = true;
+            btnText.innerText = "Sending...";
+            
+            // Replaces the content of the wrapper span with the loader
+            if(iconWrapper) {
+                iconWrapper.innerHTML = '<div class="loader"></div>';
+            }
+
+            // Collect Data
+            const templateParams = {
+                from_name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                location: document.getElementById('location').value,
+                destination: document.getElementById('destination').value,
+            };
+
+            // 2. Attempt to Send
+            if (YOUR_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
+                // Demo Mode Fallback
+                 setTimeout(() => {
+                    showSuccess();
+                    alert("Demo Mode: Configure Keys at bottom of code.");
+                }, 2000);
+            } else {
+                // Real Mode
+                emailjs.send(YOUR_SERVICE_ID, YOUR_TEMPLATE_ID, templateParams)
+                    .then(function(response) {
+                        console.log('SUCCESS!', response.status, response.text);
+                        showSuccess();
+                    }, function(error) {
+                        console.log('FAILED...', error);
+                        btn.disabled = false;
+                        btnText.innerText = "Try Again";
+                        status.innerText = "Failed to send. Please check internet or call us.";
+                        status.classList.add('text-red-500');
+                        
+                        // Restore Icon on failure
+                        if(iconWrapper) {
+                             iconWrapper.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i>';
+                             lucide.createIcons(); // Re-render the icon
+                        }
+                    });
+            }
+
+            function showSuccess() {
+                btn.classList.remove('bg-brand-gold', 'hover:bg-orange-600');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                // Success State Text
+                btnText.innerText = 'Sent Successfully!';
+                // Success Icon
+                if(iconWrapper) {
+                    iconWrapper.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                    lucide.createIcons();
+                }
+
+                status.innerText = "We have received your enquiry and will call you soon.";
+                status.classList.add('text-green-600');
+                
+                document.getElementById('enquiryForm').reset();
+                
+                // Reset button after 5 seconds
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.add('bg-brand-gold', 'hover:bg-orange-600');
+                    btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    
+                    btnText.innerText = 'Send Enquiry';
+                    if(iconWrapper) {
+                        iconWrapper.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }
+                    status.innerText = "";
+                }, 5000);
+            }
+        }
+
+        // --- WHATSAPP REDIRECT LOGIC ---
+        function openWhatsApp() {
+            // Template message for easy customer use
+            const message = `Hello Travizo! 👋%0A%0AI am interested in planning a trip.%0A%0AName:%0ADates:%0ADestination:%0ABudget:`;
+            
+            // Construct the API URL
+            const url = `https://wa.me/${+919778457870}?text=${message}`;
+            
+            // Open in new tab
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
